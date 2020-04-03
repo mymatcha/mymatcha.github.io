@@ -74,6 +74,13 @@
 <h3 id="测试函数-1"><a href="#测试函数-1" class="headerlink" title="测试函数"></a>测试函数</h3><ul>
 <li><p>先创建被代理对象，再创建代理对象，将代理对象放置于代理对象中，已实现对方法的加强</p>
   <figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">public class Test &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        Calculator calculator = new CalculatorImpl();</span><br><span class="line">        CalculatorProxy proxy = new CalculatorProxy(calculator);</span><br><span class="line">        proxy.add(1,2);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="动态代理和静态代理的区别"><a href="#动态代理和静态代理的区别" class="headerlink" title="动态代理和静态代理的区别"></a>动态代理和静态代理的区别</h2><ul>
+<li><p>1、静态代理业务类只需要关注业务逻辑本身，保证了业务类的重用性。代理对象的一个接口只服务于一种类型的对象，如果要代理的方法很多，需要为每一种方法都进行<br>代理，静态代理在程序规模稍大时就无法胜任。如果接口增加一个方法，除了所有实现类需要实现这个方法外，所有代理类也需要实现此方法，增加了代码维护的复杂度。</p>
+</li>
+<li><p>2、动态代理与静态代理相比较，最大的好处是接口中声明的所有方法都被转移到调用处理器一个集中的方法中处理（InvocationHandler invoke）。这样，在接口方法数量比较多的时候，可以进行灵活处理，而不需要像静态代理那样每一个方法进行中转。而且动态代理的应用使类职责更加单一，复用性更强。</p>
 </li>
 </ul>
 ]]></content>
