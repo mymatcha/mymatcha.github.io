@@ -12,7 +12,7 @@
 
 <h2 id="文件下载中中文乱码问题"><a href="#文件下载中中文乱码问题" class="headerlink" title="文件下载中中文乱码问题"></a>文件下载中中文乱码问题</h2><p>首先，在处理文件下载时的中文乱码问题前，要处理前后端一般交互时的中文乱码问题，解决这个问题要进行两个操作。</p>
 <ol>
-<li>将文件的默认编码方式改为UTF-8<br><img src="./springboot%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%9A%84%E4%B8%8B%E8%BD%BD/%E4%BF%AE%E6%94%B9IDEA%E9%BB%98%E8%AE%A4%E7%BC%96%E7%A0%81.png" alt="icon"></li>
+<li>将文件的默认编码方式改为UTF-8<br><img src="%E4%BF%AE%E6%94%B9IDEA%E9%BB%98%E8%AE%A4%E7%BC%96%E7%A0%81.png" alt="icon"></li>
 <li>配置springboot的配置文件</li>
 </ol>
 <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">spring.http.encoding.charset=utf-8</span><br><span class="line">spring.http.encoding.enabled=<span class="literal">true</span></span><br><span class="line">spring.http.encoding.force=<span class="literal">true</span></span><br></pre></td></tr></table></figure>
