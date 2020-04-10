@@ -19,6 +19,33 @@
 ]]></content>
   </entry>
   <entry>
+    <title>springboot实现文件的下载(处理中文乱码)</title>
+    <url>/2020/04/09/springboot%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%9A%84%E4%B8%8B%E8%BD%BD/</url>
+    <content><![CDATA[<h2 id="对文件下载的理解"><a href="#对文件下载的理解" class="headerlink" title="对文件下载的理解"></a>对文件下载的理解</h2><p>文件下载的实现可以理解为是将一个文件以字节流的形式响应给客户端。但是简单地传递流并不能实现文件下载。还需要设置两个头信息。</p>
+<p>1.设置响应内容的类型ContentType为下载的类型。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">response.setContentType(<span class="string">"application/force-download"</span>);</span><br></pre></td></tr></table></figure>
+
+<p>2.设置响应头信息Header来指定文件名和文件的扩展类型。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">response.setHeader(<span class="string">"Content-Disposition"</span>,<span class="string">"attachment;fileName="</span> + fileName);</span><br></pre></td></tr></table></figure>
+
+<h3 id="完整的Controller类"><a href="#完整的Controller类" class="headerlink" title="完整的Controller类"></a>完整的Controller类</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">@GetMapping(<span class="string">"/downloadFiles"</span>)</span><br><span class="line">public void downloadFiles(String fileName,HttpServletResponse response) &#123;</span><br><span class="line"></span><br><span class="line">    String filePath = <span class="string">"C:/upFiles"</span>;</span><br><span class="line">    File file = new File( filePath+ <span class="string">"/"</span> + fileName);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (file.exists())&#123;</span><br><span class="line">        //注意在将中文数据传回前端时，要将字符串先通过utf-8解码为字节码，</span><br><span class="line">        //然后通过ios-8859-1的方式进行编码，在传回前端。</span><br><span class="line">        fileName = new String(fileName.getBytes(StandardCharsets.UTF_8),</span><br><span class="line">        StandardCharsets.ISO_8859_1);</span><br><span class="line">        response.setContentType(<span class="string">"application/force-download"</span>);</span><br><span class="line">        response.setHeader(<span class="string">"Content-Disposition"</span>,<span class="string">"attachment;fileName="</span> + fileName);</span><br><span class="line"></span><br><span class="line">        byte[] buffer = new byte[1024];</span><br><span class="line">        OutputStream os = null;</span><br><span class="line">        FileInputStream fis = null;</span><br><span class="line">        BufferedInputStream bis = null;</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            os = response.getOutputStream();</span><br><span class="line">            fis = new FileInputStream(file);</span><br><span class="line">            bis = new BufferedInputStream(fis);</span><br><span class="line">            int r = 0;</span><br><span class="line">            <span class="keyword">while</span> ((r = bis.read(buffer)) != -1)&#123;</span><br><span class="line">                os.write(buffer,0,r);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;catch (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;finally &#123;</span><br><span class="line">            //关闭流</span><br><span class="line">            try &#123;</span><br><span class="line">                <span class="keyword">if</span> (os != null)&#123;</span><br><span class="line">                    os.close();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; catch (IOException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            try &#123;</span><br><span class="line">                <span class="keyword">if</span> (bis != null)&#123;</span><br><span class="line">                    bis.close();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; catch (IOException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            try &#123;</span><br><span class="line">                <span class="keyword">if</span> (fis != null)&#123;</span><br><span class="line">                    fis.close();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; catch (IOException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="html文件"><a href="#html文件" class="headerlink" title="html文件"></a>html文件</h2><p>只需要增加一个访问controller的连接即可。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">&lt;a href=<span class="string">"/downloadFiles?fileName=我的文件.txt"</span>&gt;我的文件.txt&lt;/a&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="文件下载中中文乱码问题"><a href="#文件下载中中文乱码问题" class="headerlink" title="文件下载中中文乱码问题"></a>文件下载中中文乱码问题</h2><p>首先，在处理文件下载时的中文乱码问题前，要处理前后端一般交互时的中文乱码问题，解决这个问题要进行两个操作。</p>
+<ol>
+<li>将文件的默认编码方式改为UTF-8<br><img src="./springboot%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%9A%84%E4%B8%8B%E8%BD%BD/%E4%BF%AE%E6%94%B9IDEA%E9%BB%98%E8%AE%A4%E7%BC%96%E7%A0%81.png" alt="icon"></li>
+<li>配置springboot的配置文件</li>
+</ol>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">spring.http.encoding.charset=utf-8</span><br><span class="line">spring.http.encoding.enabled=<span class="literal">true</span></span><br><span class="line">spring.http.encoding.force=<span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>在将上面的配置完成后，一般的前后端交互时不会出现中文乱码的。但是，文件的下载是通过链接以get方式在url中传递信息给后端，在url中字符的编码方式为ISO-8859-1。所以在后端将信息返回给前端时，也要将字符串的编码修改为ISO-8859-1，然后才返回给前端。</p>
+<p>将文件名先通过UTF-8编码进行解码成字节码，再通过ISO-8859-1编码编码为字符串，这样便可以使响应给前端的中文信息即文件名不乱码。</p>
+<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">fileName = new String(fileName.getBytes(StandardCharsets.UTF_8),</span><br><span class="line">        StandardCharsets.ISO_8859_1);</span><br></pre></td></tr></table></figure>
+]]></content>
+  </entry>
+  <entry>
     <title>springboot实现文件上传</title>
     <url>/2020/04/06/springboot%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0/</url>
     <content><![CDATA[<h2 id="对文件上传的理解"><a href="#对文件上传的理解" class="headerlink" title="对文件上传的理解"></a>对文件上传的理解</h2><p>文件上传可以理解为这么一个过程：客户端通过表单将文件传递给服务端，服务端获取到文件后，通过MultipartFile的transferTo()方法将文件传输至特定的路径，即可完成文件的上传。</p>
@@ -62,33 +89,6 @@
 <blockquote>
 <p>属性multiple表示支持多文件上传，在点击上传后，一次性选中多个文件即可。</p>
 </blockquote>
-]]></content>
-  </entry>
-  <entry>
-    <title>springboot实现文件的下载(处理中文乱码)</title>
-    <url>/2020/04/09/springboot%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%9A%84%E4%B8%8B%E8%BD%BD/</url>
-    <content><![CDATA[<h2 id="对文件下载的理解"><a href="#对文件下载的理解" class="headerlink" title="对文件下载的理解"></a>对文件下载的理解</h2><p>文件下载的实现可以理解为是将一个文件以字节流的形式响应给客户端。但是简单地传递流并不能实现文件下载。还需要设置两个头信息。</p>
-<p>1.设置响应内容的类型ContentType为下载的类型。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">response.setContentType(<span class="string">"application/force-download"</span>);</span><br></pre></td></tr></table></figure>
-
-<p>2.设置响应头信息Header来指定文件名和文件的扩展类型。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">response.setHeader(<span class="string">"Content-Disposition"</span>,<span class="string">"attachment;fileName="</span> + fileName);</span><br></pre></td></tr></table></figure>
-
-<h3 id="完整的Controller类"><a href="#完整的Controller类" class="headerlink" title="完整的Controller类"></a>完整的Controller类</h3><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">@GetMapping(<span class="string">"/downloadFiles"</span>)</span><br><span class="line">public void downloadFiles(String fileName,HttpServletResponse response) &#123;</span><br><span class="line"></span><br><span class="line">    String filePath = <span class="string">"C:/upFiles"</span>;</span><br><span class="line">    File file = new File( filePath+ <span class="string">"/"</span> + fileName);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (file.exists())&#123;</span><br><span class="line">        //注意在将中文数据传回前端时，要将字符串先通过utf-8解码为字节码，</span><br><span class="line">        //然后通过ios-8859-1的方式进行编码，在传回前端。</span><br><span class="line">        fileName = new String(fileName.getBytes(StandardCharsets.UTF_8),</span><br><span class="line">        StandardCharsets.ISO_8859_1);</span><br><span class="line">        response.setContentType(<span class="string">"application/force-download"</span>);</span><br><span class="line">        response.setHeader(<span class="string">"Content-Disposition"</span>,<span class="string">"attachment;fileName="</span> + fileName);</span><br><span class="line"></span><br><span class="line">        byte[] buffer = new byte[1024];</span><br><span class="line">        OutputStream os = null;</span><br><span class="line">        FileInputStream fis = null;</span><br><span class="line">        BufferedInputStream bis = null;</span><br><span class="line"></span><br><span class="line">        try &#123;</span><br><span class="line">            os = response.getOutputStream();</span><br><span class="line">            fis = new FileInputStream(file);</span><br><span class="line">            bis = new BufferedInputStream(fis);</span><br><span class="line">            int r = 0;</span><br><span class="line">            <span class="keyword">while</span> ((r = bis.read(buffer)) != -1)&#123;</span><br><span class="line">                os.write(buffer,0,r);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;catch (IOException e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;finally &#123;</span><br><span class="line">            //关闭流</span><br><span class="line">            try &#123;</span><br><span class="line">                <span class="keyword">if</span> (os != null)&#123;</span><br><span class="line">                    os.close();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; catch (IOException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            try &#123;</span><br><span class="line">                <span class="keyword">if</span> (bis != null)&#123;</span><br><span class="line">                    bis.close();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; catch (IOException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">            try &#123;</span><br><span class="line">                <span class="keyword">if</span> (fis != null)&#123;</span><br><span class="line">                    fis.close();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; catch (IOException e) &#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="html文件"><a href="#html文件" class="headerlink" title="html文件"></a>html文件</h2><p>只需要增加一个访问controller的连接即可。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">&lt;a href=<span class="string">"/downloadFiles?fileName=我的文件.txt"</span>&gt;我的文件.txt&lt;/a&gt;</span><br></pre></td></tr></table></figure>
-
-<h2 id="文件下载中中文乱码问题"><a href="#文件下载中中文乱码问题" class="headerlink" title="文件下载中中文乱码问题"></a>文件下载中中文乱码问题</h2><p>首先，在处理文件下载时的中文乱码问题前，要处理前后端一般交互时的中文乱码问题，解决这个问题要进行两个操作。</p>
-<ol>
-<li>将文件的默认编码方式改为UTF-8<br><img src="./springboot%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E7%9A%84%E4%B8%8B%E8%BD%BD/%E4%BF%AE%E6%94%B9IDEA%E9%BB%98%E8%AE%A4%E7%BC%96%E7%A0%81.png" alt="icon"></li>
-<li>配置springboot的配置文件</li>
-</ol>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">spring.http.encoding.charset=utf-8</span><br><span class="line">spring.http.encoding.enabled=<span class="literal">true</span></span><br><span class="line">spring.http.encoding.force=<span class="literal">true</span></span><br></pre></td></tr></table></figure>
-
-<p>在将上面的配置完成后，一般的前后端交互时不会出现中文乱码的。但是，文件的下载是通过链接以get方式在url中传递信息给后端，在url中字符的编码方式为ISO-8859-1。所以在后端将信息返回给前端时，也要将字符串的编码修改为ISO-8859-1，然后才返回给前端。</p>
-<p>将文件名先通过UTF-8编码进行解码成字节码，再通过ISO-8859-1编码编码为字符串，这样便可以使响应给前端的中文信息即文件名不乱码。</p>
-<figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">fileName = new String(fileName.getBytes(StandardCharsets.UTF_8),</span><br><span class="line">        StandardCharsets.ISO_8859_1);</span><br></pre></td></tr></table></figure>
 ]]></content>
   </entry>
   <entry>
